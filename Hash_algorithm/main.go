@@ -21,7 +21,9 @@ func binary(s string) string { //converts string message to binary bits represen
 
 func parseBinToHex(s string) uint32 {
 	ui, _ := strconv.ParseUint(s, 2, 64)
-	return uint32(ui)
+	ans := fmt.Sprintf("%x", ui)
+	res, _ := strconv.Atoi(ans)
+	return uint32(res)
 }
 
 func GetSHA1Hash(message string) {
@@ -38,8 +40,8 @@ func GetSHA1Hash(message string) {
 	//ex: message = "abc"
 	ml := len(binary(message)) //length of the massage in bits = int ex: 24
 	ost := ml % 512
-	bitsMl := binary(strconv.Itoa(len(binary(message))))  //(length of the massage in bits) in bits = bits ex: 11000
-	Ml := len(binary(strconv.Itoa(len(binary(message))))) //length ((length of the massage in bits) in bits )= int ex:5
+	bitsMl := strconv.FormatInt(int64(ml), 2) //(length of the massage in bits) in bits = bits ex: 11000
+	Ml := len(bitsMl)                         //length ((length of the massage in bits) in bits )= int ex:5
 
 	byteArr := binary(message)
 	byteArr += "1"
@@ -50,19 +52,29 @@ func GetSHA1Hash(message string) {
 		byteArr += "0"
 	} //fills length to 64 bits
 	byteArr += bitsMl
-	//fmt.Println(byteArr)
-	//break message into 512-bit chunks
-	w := make([]uint32, 80)
 
-	for i := 0; i < len(byteArr); i += 512 {
-		for j := 0; j < 16; j++ {
-			w[j] = parseBinToHex(byteArr[i : i+512])
-		}
-		for j := 16; j <= 79; j++ {
-			w[j] = uint32(bits.RotateLeft(uint(w[j-3]^w[j-8]^w[j-14]^w[j-16]), 5))
+	//break message into 512-bit chunks
+	w := make([][]uint32, 80, 80)
+
+	for i := 0; i < 80; i++ {
+		w[i] = make([]uint32, 80)
+		for j := 0; j < 80; j++ {
+			w[i][j] = 0
 		}
 	}
-	//fmt.Println("aaaaa", w)
+
+	block := 0
+	for k := 0; k < len(byteArr); k += 512 {
+		for i, j := 0, 0; i < len(byteArr) && j < 16; j++ {
+			w[block][j] = parseBinToHex(byteArr[i : i+32])
+			i += 32
+		}
+		for j := 16; j < 80; j++ {
+			w[block][j] = uint32(bits.RotateLeft(uint((w[block][j-3]^w[block][j-8])^w[block][j-14]^w[block][j-16]), 5))
+
+		}
+		block++
+	}
 
 	var (
 		a = h0
@@ -74,32 +86,35 @@ func GetSHA1Hash(message string) {
 
 	var f, k uint32
 
-	for i := 0; i < 80; i++ {
-		if 0 <= i && i <= 19 {
-			f = (b & c) | ((^b) & d)
-			k = 0x5A827999
-		} else if 20 <= i && i <= 39 {
-			f = b ^ c ^ d
-			k = 0x6ED9EBA1
-		} else if 40 <= i && i <= 59 {
-			f = (b & c) | (b & d) | (c & d)
-			k = 0x8F1BBCDC
-		} else if 60 <= i && i <= 79 {
-			f = b ^ c ^ d
-			k = 0xCA62C1D6
+	for iter := 0; iter < block; iter++ {
+		for i := 0; i < 80; i++ {
+			if 0 <= i && i <= 19 {
+				f = (b & c) | ((^b) & d)
+				k = 0x5A827999
+			} else if 20 <= i && i <= 39 {
+				f = b ^ c ^ d
+				k = 0x6ED9EBA1
+			} else if 40 <= i && i <= 59 {
+				f = (b & c) | (b & d) | (c & d)
+				k = 0x8F1BBCDC
+			} else if 60 <= i && i <= 79 {
+				f = b ^ c ^ d
+				k = 0xCA62C1D6
+			}
+			temp := uint32(bits.RotateLeft(uint(a), 5)) + f + e + k + w[iter][i]
+			e = d
+			d = c
+			c = uint32(bits.RotateLeft(uint(b), 30))
+			b = a
+			a = temp
+			//fmt.Println(a, b, c, d, e)
 		}
-		temp := uint32(bits.RotateLeft(uint(a), 5)) + f + e + k + w[i]
-		e = d
-		d = c
-		c = uint32(bits.RotateLeft(uint(b), 30))
-		b = a
-		a = temp
+		h0 += a
+		h1 += b
+		h2 += c
+		h3 += d
+		h4 += e
 	}
-	h0 += a
-	h1 += b
-	h2 += c
-	h3 += d
-	h4 += e
 
 	H0 := big.NewInt(int64(h0))
 	H1 := big.NewInt(int64(h1))
