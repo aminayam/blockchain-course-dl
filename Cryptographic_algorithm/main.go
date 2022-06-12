@@ -1,10 +1,12 @@
 package main
 
 import (
-//"Cryptographic_algorithm/VigenereCipher"
+	"Cryptographic_algorithm/VigenereCipher"
+	"fmt"
 )
 
 func main() {
-	//a := VigenereCipher.VigenereCipher("abc", "def")
-	//fmt.Println(a)
+	//please, enter your plaintext and key ONLY lowercase letters :)
+	encodeResult := VigenereCipher.MyChipher("helloworld", "blockchain")
+	fmt.Println("Ciphertext:", encodeResult)
 }

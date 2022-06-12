@@ -1,17 +1,17 @@
 package VigenereCipher
 
-func VigenereCipher(message string, key string) string {
-	m := len(message)
+func MyChipher(plaintext string, key string) string { //VigenereCipher realization
+	m := len(plaintext)
 	Key := NewKey(m, key)
 	var ciphertext string
-
 	for i := 0; i < m; i++ {
-		ciphertext += string((message[i] + Key[i]) % 26)
+		res := (plaintext[i] - 92 + Key[i] - 102) % 26 //this peculiar numbers implements magic with ascii in golang
+		ciphertext += string(res + 97)
 	}
 	return ciphertext
 }
 
-func NewKey(m int, key string) string {
+func NewKey(m int, key string) string { //generates new keyword based on key that repeats until it matches the length of the plaintext
 	i := 0
 	for {
 		if m == i {
