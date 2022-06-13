@@ -65,17 +65,15 @@ func GetSHA1Hash(message string) {
 
 	block := 0
 	for k := 0; k < len(byteArr); k += 512 {
-		for i, j := 0, 0; i < 512 && j < 16; j++ {
-			w[block][j] = parseBinToHex(byteArr[i : i+32])
+		for i, j := 0, 0; i < k+512 && j < 16; j++ {
+			w[block][j] = parseBinToHex(byteArr[k+i : k+i+32])
 			i += 32
 		}
 		for j := 16; j < 80; j++ {
-			w[block][j] = uint32(bits.RotateLeft(uint((w[block][j-3]^w[block][j-8])^w[block][j-14]^w[block][j-16]), 5))
-
+			w[block][j] = bits.RotateLeft32(w[block][j-3]^w[block][j-8]^w[block][j-14]^w[block][j-16], 5)
 		}
 		block++
 	}
-
 	var (
 		a = h0
 		b = h1
