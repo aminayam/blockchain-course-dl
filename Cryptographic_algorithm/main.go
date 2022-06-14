@@ -4,7 +4,6 @@ import (
 	"Cryptographic_algorithm/DigitalSignature"
 	"Cryptographic_algorithm/VigenereCipher"
 	"fmt"
-	"math/big"
 )
 
 func main() {
@@ -15,9 +14,11 @@ func main() {
 	fmt.Println("Vigenere Ciphertext:", encodeResult)
 
 	//RSA
-	d, e, n := DigitalSignature.KeyGen()
-	encr := DigitalSignature.Encrypt(big.NewInt(123), e, n)
-	decr := DigitalSignature.Decrypt(big.NewInt(15), d, n)
+	//it works now only for "small" integers
+	//You can put your own prime numbers in func KeyGen() and your own message to encrypt/decrypt by this generated keys
+	d, e, n := DigitalSignature.KeyGen(3, 11)
+	encr := DigitalSignature.Encrypt(2, d, n)
+	decr := DigitalSignature.Decrypt(29, e, n)
 	fmt.Println("Cipher:", encr, "Plain:", decr)
 
 }
